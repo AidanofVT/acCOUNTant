@@ -1,0 +1,29 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build a curse",
+            "type": "cppbuild",
+            "command": "C:/raylib/w64devkit/bin/g++.exe",
+            "args": [
+                "-g",
+                // "-fpermissive",
+                "-I", "..",
+                "-I", "../..",
+                "-L", "..",
+                "p3.cpp",
+                // "../*.c",
+                "-o", "outcome.exe",
+                "-l:pdcurses.a",
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}
