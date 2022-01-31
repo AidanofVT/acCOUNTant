@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <cctype>
 #include <ctime>
+#include <fstream>
 #include <string>
 
 // MUST "DEALLOCATE" C-STYLE STRINGS!!!!!
@@ -19,12 +20,26 @@ void newStart () {
     anchorTime = time(NULL);
 }
 
-std::string formatTime (int timeInSeconds) {
+void wipeTime () {
+    mvprintw(2, 0, "");       
+    clrtoeol();
+}
+
+void showTimeFactor () {
+    std::string asString{"x" + std::to_string(multiplier)};
+    while (asString[asString.length() - 1] == '0' || asString[asString.length() - 1] == '.') {
+        asString.erase(asString.length() - 1);
+    }
+    mvprintw(0, 0, asString.c_str());
+}
+
+void showCount (int timeInSeconds) {
     std::string hours {std::to_string(countNow / 3600)};
     std::string minutes {std::to_string(countNow % 3600 / 60)};
     std::string seconds {std::to_string(countNow % 60)};
-    std::string formattedTime{hours + ":" + minutes + ":" + seconds};
-    return formattedTime;
+    std::string formattedTime{hours + ":" + minutes + ":" + seconds};    
+    mvprintw(2, 0, formattedTime.c_str());
+    mvprintw(1, rightwardness,"");
 }
 
 std::string takeCommand () {
@@ -63,6 +78,7 @@ void enactTimeSumChange (std::string timeChange) {
         int minutes {std::stoi(timeChange)};
         int seconds {minutes * 60};
         countAsOfLastAnchor += seconds;
+        wipeTime();
     }    
     else {
         throw timeChangeError;
@@ -95,6 +111,7 @@ void enactMultiplierChange (std::string newMultiplier) {
     catch (const std::invalid_argument& whoops) {
         mvprintw(0, 1, "Nope! Changes to the time muliplier should look like this: 'u1' or 'd3.33'.");
     }
+    showTimeFactor();
 }
 
 void processCommand (std::string command) {
@@ -116,15 +133,25 @@ int main () {
     WINDOW *myWindow{initscr()};
     raw();
     nodelay(stdscr, true);
+    std::fstream readerWriter {"acCOUNTant_state.txt"};
+    char temp [10];
+    readerWriter.getline(temp, 10);
+    countAsOfLastAnchor = std::stoi(temp);
+    readerWriter.clear();
     int lastCharHit{};
+    int i{};
+    showTimeFactor();
     while (lastCharHit != 'q') {
         lastCharHit = mvgetch(1, rightwardness);
         if (running) {
             countNow = countAsOfLastAnchor + difftime(time(NULL), anchorTime) * multiplier;
-            mvprintw(0, 0, "");       
-            clrtoeol();
-            mvprintw(2, 0, formatTime(countNow).c_str());
-            mvprintw(1, rightwardness,"");
+            wipeTime();
+            showCount(countNow);
+            if (i % 500 == 0) {
+                readerWriter.seekp(0);
+                readerWriter << countNow << "         ";
+                readerWriter.flush();
+            }
         }
         if (lastCharHit == ' ') {            
             running = !running;
@@ -140,6 +167,7 @@ int main () {
             mvprintw(1, ++rightwardness - 1, "%c", lastCharHit);
         }      
         refresh();
+        i = (i + 1) % 1000;
         Sleep(10);
     }
     endwin();
