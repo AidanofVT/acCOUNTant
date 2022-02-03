@@ -15,6 +15,9 @@ int countNow{0};
 float multiplier{1};
 int rightwardness{0};
 
+std::string oneOne{"    111\n  11111\n    111\n    111\n    111\n    111\n    111\n    111\n    111\n  1111111"};
+std::string oneTwo{};
+
 void newStart () {
     countAsOfLastAnchor = countNow;
     anchorTime = time(NULL);
@@ -33,7 +36,8 @@ void showTimeFactor () {
     mvprintw(0, 0, asString.c_str());
 }
 
-void showCount (int timeInSeconds) {
+void showCount () {
+    wipeTime();
     std::string hours {std::to_string(countNow / 3600)};
     std::string minutes {std::to_string(countNow % 3600 / 60)};
     std::string seconds {std::to_string(countNow % 60)};
@@ -57,28 +61,26 @@ std::string takeCommand () {
 }
 
 void enactTimeSumChange (std::string timeChange) {
-    std::string timeChangeError{"Uh-uh: time insertions need to be in either ## (for minutes) or ##:## (for hour:minute) format."};
+    std::string timeChangeError{"Nuh-uh: time modifications need to be in either ## (for minutes) format or ##:## (for hours:minutes) format."};
     int i{1};
 // Itterate until something that's NOT a number.
     for (; std::isdigit(timeChange[i]); ++i) {        
     }
     if (timeChange[i] == ':') {
-        int firstNumber{};
+        int hours{std::stoi(timeChange.substr(0, i - 1))};
         int j {i + 1};
         for (; std::isdigit(timeChange[j]); ++j) {        
         }
         if (timeChange[j] == NULL) {
-
+            int minutes{std::stoi(timeChange.substr(i + 1, j - 1))};
+            countAsOfLastAnchor += (hours * 60 + minutes) * 60;
         }
         else {
             throw timeChangeError;
         }
     }
     else if (timeChange[i] == NULL) {
-        int minutes {std::stoi(timeChange)};
-        int seconds {minutes * 60};
-        countAsOfLastAnchor += seconds;
-        wipeTime();
+        countAsOfLastAnchor += std::stoi(timeChange) * 60;
     }    
     else {
         throw timeChangeError;
@@ -134,19 +136,20 @@ int main () {
     raw();
     nodelay(stdscr, true);
     std::fstream readerWriter {"acCOUNTant_state.txt"};
-    char temp [10];
-    readerWriter.getline(temp, 10);
-    countAsOfLastAnchor = std::stoi(temp);
+    std::string temp{};
+    readerWriter >> temp;
+    countNow = countAsOfLastAnchor = std::stoi(temp);
     readerWriter.clear();
     int lastCharHit{};
     int i{};
     showTimeFactor();
-    while (lastCharHit != 'q') {
+    showCount();
+    while (lastCharHit != 'q') {        
+        mvprintw(6, 3, "%i", countAsOfLastAnchor);
         lastCharHit = mvgetch(1, rightwardness);
         if (running) {
             countNow = countAsOfLastAnchor + difftime(time(NULL), anchorTime) * multiplier;
-            wipeTime();
-            showCount(countNow);
+            showCount();
             if (i % 500 == 0) {
                 readerWriter.seekp(0);
                 readerWriter << countNow << "         ";
