@@ -3,9 +3,7 @@
 #include <Windows.h>
 #include <cctype>
 #include <ctime>
-#include <iostream>
 #include <fstream>
-#include <filesystem>
 #include <stdexcept>
 #include <string>
 
@@ -213,14 +211,16 @@ int main () {
     int i{};
     std::fstream readerWriter {};
 // This is necessary because fstream normally doesn't create a new file if its target doesn't exist. We also need to supply a value to be read a few lines later.
-    if (std::filesystem::exists(fileName) == false) {
+    if (readerWriter.peek() == EOF) {
         readerWriter.open(fileName, std::fstream::out);
         readerWriter << "0";
+        readerWriter.clear();
         readerWriter.close();
-    }
+    }    
     readerWriter.open(fileName, std::fstream::out | std::fstream::in);
     std::string temp{};
     readerWriter >> temp;
+    readerWriter.clear();
     countNow = countAsOfLastAnchor = std::stoi(temp);
     showTimeFactor();
     showCount();
