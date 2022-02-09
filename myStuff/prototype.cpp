@@ -13,19 +13,21 @@ int countAsOfLastAnchor{0};
 int countNow{0};
 float multiplier{1};
 int rightwardness{0};
+char fileName [21] {"acCOUNTant_state.txt"};
+std::fstream readerWriter {fileName};
 
-WINDOW *notices {};
-WINDOW *inputSpace{};
-WINDOW *firstDigit {};
-WINDOW *secondDigit {};
-WINDOW *thirdDigit {};
-WINDOW *fourthDigit {};
-WINDOW *fifthDigit {};
-WINDOW *sixthDigit {};
-WINDOW *seventhDigit {};
-WINDOW *eighthDigit {};
+// WINDOW *notices {};
+// WINDOW *inputSpace{};
+// WINDOW *firstDigit {};
+// WINDOW *secondDigit {};
+// WINDOW *thirdDigit {};
+// WINDOW *fourthDigit {};
+// WINDOW *fifthDigit {};
+// WINDOW *sixthDigit {};
+// WINDOW *seventhDigit {};
+// WINDOW *eighthDigit {};
 
-WINDOW digits[8];
+// WINDOW digits[8];
 
 // std::string oneOne{"    111\n  11111\n    111\n    111\n    111\n    111\n    111\n    111\n    111\n  1111111"};
 // std::string oneTwo{   "22222\n 222   222\n222     222\n      222\n     222\n   222\n 222\n222\n222\n22222222222"};
@@ -41,20 +43,50 @@ WINDOW digits[8];
 
 void badInput(std::string customMessage = "") {mvprintw(0, 0, "That's not a properly formatted command. %s", customMessage.c_str());}
 
-void settup () {
-    firstDigit = newwin(10,11,3,0);
-    secondDigit = newwin(10,11,3,12);
-    thirdDigit = newwin(10,11,3,24);
-    fourthDigit = newwin(10,11,3,36);
-    fifthDigit = newwin(10,11,3,48);
-    sixthDigit = newwin(10,11,3,60);
-    seventhDigit = newwin(10,11,3,72);
-    eighthDigit = newwin(10,11,3,84);
-}
+// void settup () {
+//     firstDigit = newwin(10,11,3,0);
+//     secondDigit = newwin(10,11,3,12);
+//     thirdDigit = newwin(10,11,3,24);
+//     fourthDigit = newwin(10,11,3,36);
+//     fifthDigit = newwin(10,11,3,48);
+//     sixthDigit = newwin(10,11,3,60);
+//     seventhDigit = newwin(10,11,3,72);
+//     eighthDigit = newwin(10,11,3,84);
+// }
 
 void wipeTime () {
     mvprintw(2, 0, "");       
     clrtoeol();
+}
+
+int parseTime(std::string input) {
+    int i{1};
+// Itterate until something that's NOT a number.
+    while (std::isdigit(input[i]) && i < input.length()) {  
+        ++i;      
+    }
+    if (input[i] == ':') {
+// Remember that substr()'s second parameter is the LENGTH of the substring, not the index of its end.
+        std::string hoursAsString{input.substr(0, i)};
+        int hours{std::stoi(hoursAsString)};
+        int j {i + 1};
+        while (std::isdigit(input[j]) && j < input.length()) {  
+            ++j;      
+        }
+        if (j < input.length()) {
+            return 0;           
+        }
+        else {
+            int minutes{std::stoi(input.substr(i + 1, j - i - 1))};
+            return (hours * 60 + minutes) * 60;
+        }
+    }
+    else if (i < input.length()) {
+        return 0;
+    }    
+    else {
+        return std::stoi(input) * 60;
+    }
 }
 
 void showTimeFactor () {
@@ -69,14 +101,13 @@ void showTimeFactor () {
 }
 
 void showCount () {
-    // wipeTime();
+    wipeTime();
     std::string hours {std::to_string(countNow / 3600)};
     std::string minutes {std::to_string(countNow % 3600 / 60)};
     std::string seconds {std::to_string(countNow % 60)};
     std::string formattedTime{hours + ":" + minutes + ":" + seconds};
-    mvprintw(2,0,"");
-    clrtoeol();
     mvprintw(2,0,formattedTime.c_str());
+    mvprintw(1, rightwardness,"");
     // std::string numeral{};
     // for (int i{0}; i < 8; ++i) {
     //     switch (formattedTime[i]) {
@@ -115,7 +146,6 @@ void showCount () {
     //             break;             
     //     }
     // }
-    mvprintw(1, rightwardness,"");
 }
 
 void newStart () {
@@ -124,36 +154,35 @@ void newStart () {
     showCount();
 }
 
-void enactTimeSumChange (std::string timeChange) {
-    std::string timeChangeError{"Time modifications need to be in either '+/-##' format (for minutes) or '+/-##:##' format (for hours:minutes)."};
-    int i{1};
-// Itterate until something that's NOT a number.
-    while (std::isdigit(timeChange[i]) && i < timeChange.length()) {  
-        ++i;      
+void writeToFile () {
+    readerWriter.seekp(0);
+    if (!(readerWriter << countNow << "         ")) {
+        throw std::runtime_error("Problem writing to file.");
     }
-    if (timeChange[i] == ':') {
-// Remember that substr()'s second parameter is the LENGTH of the substring, not the index of its end.
-        std::string hoursAsString{timeChange.substr(0, i)};
-        int hours{std::stoi(hoursAsString)};
-        int j {i + 1};
-        while (std::isdigit(timeChange[j]) && j < timeChange.length()) {  
-            ++j;      
-        }
-        if (j < timeChange.length()) {
-            badInput(timeChangeError);           
-        }
-        else {
-            int minutes{std::stoi(timeChange.substr(i + 1, j - i - 1))};
-            countNow += (hours * 60 + minutes) * 60;
-        }
+    readerWriter.flush();
+}
+
+void enactSetCount (std::string newTime) {
+    int parsed {parseTime(newTime.substr(1))};
+    if (parsed == 0) {
+        badInput("Time modifications need to be in either '+/-##' format (for minutes) or '+/-##:##' format (for hours:minutes).");
     }
-    else if (i < timeChange.length()) {
-        badInput(timeChangeError);
-    }    
     else {
-        countNow += std::stoi(timeChange) * 60;
+        countNow = parsed;
+        writeToFile();
+        newStart();
     }
-    newStart();
+}
+
+void enactAddDeductFromCount (std::string timeChange) {
+    int parsed {parseTime(timeChange)};
+    if (parsed == 0) {
+        badInput("Time modifications need to be in either '+/-##' format (for minutes) or '+/-##:##' format (for hours:minutes).");
+    }
+    else {
+        countNow += parsed;
+        newStart();
+    }
 }
 
 void enactMultiplierChange (std::string newMultiplier) {
@@ -195,7 +224,10 @@ void processCommand () {
             break;
         case '+':
         case '-':
-            enactTimeSumChange(command);
+            enactAddDeductFromCount(command);
+            break;
+        case 's':
+            enactSetCount(command);
             break;
         default:
             badInput();
@@ -203,14 +235,12 @@ void processCommand () {
 }
 
 int main () {
-    char fileName [21] {"acCOUNTant_state.txt"};
     WINDOW *myWindow{initscr()};
     raw();
     nodelay(stdscr, true);
     keypad(stdscr, true);
     int lastCharHit{};
     int i{};
-    std::fstream readerWriter {fileName};
 // This is necessary because fstream normally doesn't create a new file if its target doesn't exist. We also need to supply a value to be read a few lines later.
     if (readerWriter.peek() == EOF) {
         readerWriter.open(fileName, std::fstream::out);
@@ -223,19 +253,19 @@ int main () {
     readerWriter >> temp;
     readerWriter.clear();
     countNow = countAsOfLastAnchor = std::stoi(temp);
+    int previousCount{countNow};
     showTimeFactor();
     showCount();
     while (lastCharHit != 'q') {
         lastCharHit = mvgetch(1, rightwardness);
         if (running) {
             countNow = countAsOfLastAnchor + difftime(time(NULL), anchorTime) * multiplier;
-            showCount();
+            if (countNow != previousCount) {
+                showCount();
+                previousCount = countNow;
+            }
             if (i % 500 == 0) {
-                readerWriter.seekp(0);
-                if (!(readerWriter << countNow << "         ")) {
-                    throw std::runtime_error("Problem writing to file.");
-                }
-                readerWriter.flush();
+                writeToFile();
             }
         }
         if (lastCharHit == ' ') {            

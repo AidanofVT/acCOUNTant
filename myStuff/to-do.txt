@@ -1,4 +1,4 @@
-- make sure that hours, minutes, and seconds are always two digits
 - add alarm sound when the timer hits zero
-- display only refreshes when the number has actually changed
 - big digits
+- help command
+- fix displaying negative counts
