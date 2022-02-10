@@ -5,7 +5,6 @@ WINDOW *leftW{};
 WINDOW *rightW{};
 
 int main() {
-	int ch;
 	initscr();			/* Start curses mode 		*/
 	raw();				/* Line buffering disabled	*/
 	leftW = newwin(0,0,0,0);

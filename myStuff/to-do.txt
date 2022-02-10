@@ -1,4 +1,4 @@
 - add alarm sound when the timer hits zero
-- big digits
+- behavior for more than six digits (plus two colons)
 - help command
 - fix displaying negative counts

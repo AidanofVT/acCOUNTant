@@ -4,6 +4,7 @@
 #include <cctype>
 #include <ctime>
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -16,47 +17,53 @@ int rightwardness{0};
 char fileName [21] {"acCOUNTant_state.txt"};
 std::fstream readerWriter {fileName};
 
-// WINDOW *notices {};
-// WINDOW *inputSpace{};
-// WINDOW *firstDigit {};
-// WINDOW *secondDigit {};
-// WINDOW *thirdDigit {};
-// WINDOW *fourthDigit {};
-// WINDOW *fifthDigit {};
-// WINDOW *sixthDigit {};
-// WINDOW *seventhDigit {};
-// WINDOW *eighthDigit {};
+WINDOW *notices {};
+WINDOW *inputSpace{};
+WINDOW *firstDigit {};
+WINDOW *secondDigit {};
+WINDOW *thirdDigit {};
+WINDOW *fourthDigit {};
+WINDOW *fifthDigit {};
+WINDOW *sixthDigit {};
+WINDOW *seventhDigit {};
+WINDOW *eighthDigit {};
+WINDOW *digits [8] {};
 
-// WINDOW digits[8];
-
-// std::string oneOne{"    111\n  11111\n    111\n    111\n    111\n    111\n    111\n    111\n    111\n  1111111"};
-// std::string oneTwo{   "22222\n 222   222\n222     222\n      222\n     222\n   222\n 222\n222\n222\n22222222222"};
-// std::string oneThree{"  333333\n333    333\n3        33\n        333\n     333\n     3333\n       333\n3        33\n333    333\n   3333"};
-// std::string oneFour{"  44    44\n 44     44\n44      44\n44      44\n44      44\n44444444444\n        44\n        44\n        44\n        44"};
-// std::string oneFive{" 5555555555\n55\n55\n55\n  555555\n       555\n        555\n         55\n555   555\n  5555"};
-// std::string oneSix{"    666\n  666\n 66\n66\n66   666\n6666   666\n666     666\n666     666\n 666   666\n   6666"};
-// std::string oneSeven{"77777777777\n77      777\n        77\n       77\n      77\n     77\n    77\n   77\n  77\n 77"};
-// std::string oneEight{"   8888\n 88    88\n88      88\n 88    88\n  888888\n 88    88\n88      88\n88      88\n 88    88\n   8888"};
-// std::string oneNine{"   9999\n 99    99\n99      99\n 99    999\n   999 99\n      99\n     99\n    99\n   99\n  99"};
-// std::string oneZero{"    000\n 000   000\n00       00\n00       00\n00       00\n00       00\n00       00\n00       00\n00       00\n 000   000\n    000"};
-// std::string oneColon{"\n\n\n     &\n    &&\n\n     &\n    &&"};
+std::string oneOne  {"    111\n  11111\n    111\n    111\n    111\n    111\n    111\n    111\n    111\n  1111111"};
+std::string oneTwo  {"   22222\n 222   222\n222     222\n      222\n     222\n   222\n 222\n222\n222\n22222222222"};
+std::string oneThree{"  333333\n333    333\n3        33\n        333\n     333\n     3333\n       333\n3        33\n333    333\n   3333"};
+std::string oneFour {"  44    44\n 44     44\n44      44\n44      44\n44      44\n44444444444\n        44\n        44\n        44\n        44"};
+std::string oneFive {" 5555555555\n55\n55\n55\n  555555\n       555\n        555\n         55\n555   555\n  5555"};
+std::string oneSix  {"    666\n  666\n 66\n66\n66   666\n6666   666\n666     666\n666     666\n 666   666\n   6666"};
+std::string oneSeven{"77777777777\n77      777\n        77\n       77\n      77\n     77\n    77\n   77\n  77\n 77"};
+std::string oneEight{"   8888\n 88    88\n88      88\n 88    88\n  888888\n 88    88\n88      88\n88      88\n 88    88\n   8888"};
+std::string oneNine {"   9999\n 99    99\n99      99\n 99    999\n   999 99\n      99\n     99\n    99\n   99\n  99"};
+std::string oneZero {"    000\n 000   000\n00       00\n00       00\n00       00\n00       00\n00       00\n00       00\n 000   000\n    000"};
+std::string oneColon{"\n\n\n    &\n   &&\n\n    &\n   &&"};
 
 void badInput(std::string customMessage = "") {mvprintw(0, 0, "That's not a properly formatted command. %s", customMessage.c_str());}
 
-// void settup () {
-//     firstDigit = newwin(10,11,3,0);
-//     secondDigit = newwin(10,11,3,12);
-//     thirdDigit = newwin(10,11,3,24);
-//     fourthDigit = newwin(10,11,3,36);
-//     fifthDigit = newwin(10,11,3,48);
-//     sixthDigit = newwin(10,11,3,60);
-//     seventhDigit = newwin(10,11,3,72);
-//     eighthDigit = newwin(10,11,3,84);
-// }
+void settup () {
+    initscr();
+    raw();
+    nodelay(stdscr, true);
+    keypad(stdscr, true);
+    digits [0] = firstDigit = newwin(10,12,2,0);
+    digits [1] = secondDigit = newwin(10,12,2,12);
+    digits [2] = thirdDigit = newwin(10,12,2,24);
+    digits [3] = fourthDigit = newwin(10,12,2,36);
+    digits [4] = fifthDigit = newwin(10,12,2,48);
+    digits [5] = sixthDigit = newwin(10,12,2,60);
+    digits [6] = seventhDigit = newwin(10,12,2,48);
+    digits [7] = eighthDigit = newwin(10,12,2,60);
+    refresh();
+}
 
 void wipeTime () {
-    mvprintw(2, 0, "");       
-    clrtoeol();
+    for (WINDOW *inQuestion : digits) {
+        wclear(inQuestion);
+    }
+    refresh();
 }
 
 int parseTime(std::string input) {
@@ -106,46 +113,47 @@ void showCount () {
     std::string minutes {std::to_string(countNow % 3600 / 60)};
     std::string seconds {std::to_string(countNow % 60)};
     std::string formattedTime{hours + ":" + minutes + ":" + seconds};
-    mvprintw(2,0,formattedTime.c_str());
-    mvprintw(1, rightwardness,"");
-    // std::string numeral{};
-    // for (int i{0}; i < 8; ++i) {
-    //     switch (formattedTime[i]) {
-    //         case '0':
-    //             numeral = oneZero;
-    //             break;
-    //         case '1':
-    //             numeral = oneOne;
-    //             break;
-    //         case '2':
-    //             numeral = oneOne;
-    //             break;
-    //         case '3':
-    //             numeral = oneOne;
-    //             break;
-    //         case '4':
-    //             numeral = oneOne;
-    //             break;
-    //         case '5':
-    //             numeral = oneOne;
-    //             break;
-    //         case '6':
-    //             numeral = oneOne;
-    //             break;
-    //         case '7':
-    //             numeral = oneOne;
-    //             break;
-    //         case '8':
-    //             numeral = oneOne;
-    //             break;
-    //         case '9':
-    //             numeral = oneOne;
-    //             break;
-    //         case ':':
-    //             numeral = oneOne;
-    //             break;             
-    //     }
-    // }
+    std::string numeral{};
+    for (int i{0}; i <= formattedTime.length() - 1; ++i) {
+        switch (formattedTime[i]) {
+            case '0':
+                numeral = oneZero;
+                break;
+            case '1':
+                numeral = oneOne;
+                break;
+            case '2':
+                numeral = oneTwo;
+                break;
+            case '3':
+                numeral = oneThree;
+                break;
+            case '4':
+                numeral = oneFour;
+                break;
+            case '5':
+                numeral = oneFive;
+                break;
+            case '6':
+                numeral = oneSix;
+                break;
+            case '7':
+                numeral = oneSeven;
+                break;
+            case '8':
+                numeral = oneEight;
+                break;
+            case '9':
+                numeral = oneNine;
+                break;
+            case ':':
+                numeral = oneColon;
+                break;             
+        }
+        wclear(digits[i]);
+        wprintw(digits[i], numeral.c_str());
+        wrefresh(digits[i]);
+    }
 }
 
 void newStart () {
@@ -236,9 +244,7 @@ void processCommand () {
 
 int main () {
     WINDOW *myWindow{initscr()};
-    raw();
-    nodelay(stdscr, true);
-    keypad(stdscr, true);
+    settup();
     int lastCharHit{};
     int i{};
 // This is necessary because fstream normally doesn't create a new file if its target doesn't exist. We also need to supply a value to be read a few lines later.
@@ -260,7 +266,7 @@ int main () {
         lastCharHit = mvgetch(1, rightwardness);
         if (running) {
             countNow = countAsOfLastAnchor + difftime(time(NULL), anchorTime) * multiplier;
-            if (countNow != previousCount) {
+            if (countNow != previousCount) {                            
                 showCount();
                 previousCount = countNow;
             }
@@ -275,7 +281,7 @@ int main () {
             }
             mvprintw(1, rightwardness,"");
         }
-        else if (lastCharHit == 13) {
+        else if (lastCharHit == 13 || lastCharHit == PADENTER) {
             processCommand();
         }
         else if (lastCharHit != ERR) {
@@ -283,7 +289,7 @@ int main () {
                 showTimeFactor();
             }
             mvprintw(1, ++rightwardness - 1, "%c", lastCharHit);
-        }      
+        }     
         refresh();
         i = (i + 1) % 1000;
         Sleep(10);
