@@ -54,8 +54,8 @@ void settup () {
     digits [3] = fourthDigit = newwin(10,12,2,36);
     digits [4] = fifthDigit = newwin(10,12,2,48);
     digits [5] = sixthDigit = newwin(10,12,2,60);
-    digits [6] = seventhDigit = newwin(10,12,2,48);
-    digits [7] = eighthDigit = newwin(10,12,2,60);
+    digits [6] = seventhDigit = newwin(10,12,2,72);
+    digits [7] = eighthDigit = newwin(10,12,2,84);
     refresh();
 }
 
@@ -114,7 +114,7 @@ void showCount () {
     std::string seconds {std::to_string(countNow % 60)};
     std::string formattedTime{hours + ":" + minutes + ":" + seconds};
     std::string numeral{};
-    for (int i{0}; i <= formattedTime.length() - 1; ++i) {
+    for (int i{0}; i < formattedTime.length(); ++i) {
         switch (formattedTime[i]) {
             case '0':
                 numeral = oneZero;
@@ -150,7 +150,6 @@ void showCount () {
                 numeral = oneColon;
                 break;             
         }
-        wclear(digits[i]);
         wprintw(digits[i], numeral.c_str());
         wrefresh(digits[i]);
     }
