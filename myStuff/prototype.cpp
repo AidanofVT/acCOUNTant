@@ -62,17 +62,22 @@ void settup () {
 void wipeTime () {
     for (WINDOW *inQuestion : digits) {
         wclear(inQuestion);
+// I don't understand why it has to be this, not normal refresh() at the end, but if I do it that way then it doesn't work.
+        wrefresh(inQuestion);
     }
-    refresh();
 }
 
 int parseTime(std::string input) {
-    int i{1};
+    int i{0};
 // Itterate until something that's NOT a number.
     while (std::isdigit(input[i]) && i < input.length()) {  
         ++i;      
     }
     if (input[i] == ':') {
+// This is the case that the input ends in a colon.
+        if (i == input.length() - 1) {
+            return -616616;
+        }
 // Remember that substr()'s second parameter is the LENGTH of the substring, not the index of its end.
         std::string hoursAsString{input.substr(0, i)};
         int hours{std::stoi(hoursAsString)};
@@ -81,7 +86,7 @@ int parseTime(std::string input) {
             ++j;      
         }
         if (j < input.length()) {
-            return 0;           
+            return -616616;           
         }
         else {
             int minutes{std::stoi(input.substr(i + 1, j - i - 1))};
@@ -89,7 +94,7 @@ int parseTime(std::string input) {
         }
     }
     else if (i < input.length()) {
-        return 0;
+        return -616616;
     }    
     else {
         return std::stoi(input) * 60;
@@ -171,7 +176,7 @@ void writeToFile () {
 
 void enactSetCount (std::string newTime) {
     int parsed {parseTime(newTime.substr(1))};
-    if (parsed == 0) {
+    if (parsed == -616616) {
         badInput("Time modifications need to be in either '+/-##' format (for minutes) or '+/-##:##' format (for hours:minutes).");
     }
     else {
@@ -179,6 +184,7 @@ void enactSetCount (std::string newTime) {
         writeToFile();
         newStart();
     }
+    running = false;
 }
 
 void enactAddDeductFromCount (std::string timeChange) {

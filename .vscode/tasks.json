@@ -8,9 +8,9 @@
             "type": "cppbuild",
             "command": "C:/raylib/w64devkit/bin/g++.exe",
             "args": [
-                "-g",
                 // "-fpermissive",
-                "-s",
+                // "-s",
+                "-g",
                 // "-O0",
                 "-I", "..",
                 "-I", "../..",
