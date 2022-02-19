@@ -69,6 +69,9 @@ void wipeTime () {
 
 int parseTime(std::string input) {
     int i{0};
+    if (input[0] == '-' || input[0] == '+') {
+        i = 1;
+    }
 // Itterate until something that's NOT a number.
     while (std::isdigit(input[i]) && i < input.length()) {  
         ++i;      
