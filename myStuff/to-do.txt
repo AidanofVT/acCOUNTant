@@ -1,4 +1,4 @@
 - add alarm sound when the timer hits zero
-- behavior for more than six digits (plus two colons)
 - help command
 - fix displaying negative counts
+- there are still some ways that an incorrect input can kill the program
