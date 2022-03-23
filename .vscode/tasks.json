@@ -7,11 +7,10 @@
             "label": "build a curse",
             "type": "cppbuild",
             "command": "C:/raylib/w64devkit/bin/g++.exe",
-            "args": [
-                // "-fpermissive",
-                "-s",
-                // "-g",
-                "-O2",
+            "args": [                
+                "-g",
+                // "-s",
+                // "-O2",
                 "-I", "..",
                 "-I", "../..",
                 "-L", "..",

@@ -1,6 +1,9 @@
 #include "curses.h"
+#include "panel.h"
 #include <stdexcept>
 #include <Windows.h>
+#include <winuser.h>
+#include <math.h>
 #include <cctype>
 #include <ctime>
 #include <fstream>
@@ -15,11 +18,14 @@ int countAsOfLastAnchor{0};
 int countNow{0};
 float multiplier{1};
 int rightwardness{0};
+bool manualVisible{false};
 char fileName [21] {"acCOUNTant_state.txt"};
 std::fstream readerWriter {fileName};
 
 WINDOW *notices {};
 WINDOW *inputSpace{};
+WINDOW *minusSign{};
+WINDOW *manual{};
 WINDOW *firstDigit {};
 WINDOW *secondDigit {};
 WINDOW *thirdDigit {};
@@ -42,13 +48,15 @@ std::string oneNine {"   9999\n 99    99\n99      99\n 99    999\n   999 99\n   
 std::string oneZero {"    000\n 000   000\n00       00\n00       00\n00       00\n00       00\n00       00\n00       00\n 000   000\n    000"};
 std::string oneColon{"\n\n\n    &\n   &&\n\n    &\n   &&"};
 
-void badInput(std::string customMessage = "") {mvprintw(0, 0, "That's not a properly formatted command. %s", customMessage.c_str());}
+void badInput(std::string customMessage = "That's not a properly formatted command. Enter 'help' for instructions.") {mvprintw(0, 0, "%s", customMessage.c_str());}
 
 void settup () {
     initscr();
     raw();
     nodelay(stdscr, true);
     keypad(stdscr, true);
+    manual = newwin(20, 110, 2, 0);
+    minusSign = newwin(2, 7, 6, 1);    
     digits [0] = firstDigit = newwin(10,12,2,10);
     digits [1] = secondDigit = newwin(10,12,2,22);
     digits [2] = thirdDigit = newwin(10,12,2,34);
@@ -103,7 +111,8 @@ int parseTime(std::string input) {
     }    
     else {
         int outcome{std::stoi(input) * 60};
-        if (std::abs(outcome) > 359,999) {
+        int temp{std::abs(outcome)};
+        if (temp > 359999) {
             badInput("You either entered an extremely large number, or accidentally typed a non-number character.");
             return errorNumber;
         }
@@ -126,10 +135,12 @@ void showTimeFactor () {
 
 void showCount () {
     wipeTime();
-    std::string hours {std::to_string(countNow / 3600)};
-    std::string minutes {std::to_string(countNow % 3600 / 60)};
-    std::string seconds {std::to_string(countNow % 60)};
+//Absolute values are used here because having minus signs messes things up. Negativity is dealt with at the bottom.
+    std::string hours {std::to_string(abs(countNow / 3600))};
+    std::string minutes {std::to_string(abs(countNow % 3600 / 60))};
+    std::string seconds {std::to_string(abs(countNow % 60))};
     std::string formattedTime{hours + ":" + minutes + ":" + seconds};
+    std::cout << formattedTime << '\n';
     std::string numeral{};
     for (int i{0}; i < formattedTime.length(); ++i) {
         switch (formattedTime[i]) {
@@ -170,6 +181,13 @@ void showCount () {
         wprintw(digits[i], numeral.c_str());
         wrefresh(digits[i]);
     }
+    if (countNow < 0 && mvwinch(minusSign, 0, 0) != '_') {            
+        wprintw(minusSign, "______\n------");
+    }
+    else if (countNow >= 0 && mvwinch(minusSign, 0, 0) != ' ') {
+        wclear(minusSign);
+    }
+    wrefresh(minusSign); 
 }
 
 void newStart () {
@@ -228,7 +246,47 @@ void enactMultiplierChange (std::string newMultiplier) {
         showTimeFactor();
     }
     catch (const std::invalid_argument& whoops) {
-        badInput("Changes to the time muliplier should look like this: 'u1' or 'd3.33'.");
+        badInput();
+    }
+}
+
+void toggleInstructions () {
+    if (manualVisible == false) {
+        mvprintw(0,0,"");
+        clrtoeol();
+        wrefresh(manual);
+        wprintw(manual,
+            "This is acCOUNTant, a time-management timer.\n"
+            "Its intended use is to maintain a 'bank' of time which grows with some tasks and is diminished by others. \n\n"
+            
+            "The clock can be started or stopped at any time by pressing the spacebar.\n\n"
+
+            "To change how fast the clock counts up, type and enter 'u{multiplier}'\n"
+            "So, 'u2' to count up two seconds per second, or 'u.5' to count up half a second per second.\n\n"
+        );
+        wprintw(manual,
+            "If you'd like acCOUNTant to count down instead, like a timer instead of a stopwatch, type and enter 'd{multiplier}'\n"
+            "So, 'd2' to count down two seconds per second, or 'd.5' to count down half a second per second.\n\n"
+
+            "You can also manually add or deduct time, using either '+/-##' format (for minutes) or '+/-##:##' format (for hours:minutes).\n"
+            "So, '+1' to add one minute to the count, or '-1:1' to deduct one hour and one minute.\n\n"
+        );
+        wprintw(manual,
+            "Finally, if you'd like to directly set the time, you can do so with 's{time}'\n"
+            "This uses the same format as additions/deductions, but without the plus/minus signs. 's0' or 's0:0' will both set the time to zero.\n\n"
+
+            "I hope this system helps you as much as it has helped me.\n"
+            "-Aidan"
+        );
+        wrefresh(manual);
+        manualVisible = true;
+    }
+    else {
+        wclear(manual);
+        wrefresh(manual);
+        showCount();
+        showTimeFactor();
+        manualVisible = false;
     }
 }
 
@@ -239,7 +297,7 @@ void processCommand () {
     while ((charInQuestion = mvinch(1, rightwardness)) != ' ') {
         command += charInQuestion;
         ++rightwardness;
-        }  
+    }  
     rightwardness = 0;
     mvprintw(1, rightwardness, "");            
     clrtoeol();
@@ -254,6 +312,17 @@ void processCommand () {
             break;
         case 's':
             enactSetCount(command);
+            break;
+        case 'h':
+            if (command == "help" && manualVisible == false) {
+                toggleInstructions();
+                // wrefresh(manual);
+                // wprintw(manual, "test   test   test\ntest   test   test");
+                // wrefresh(manual);
+            }
+            else {
+                badInput();
+            }
             break;
         default:
             badInput();
@@ -279,36 +348,49 @@ int main () {
     readerWriter.clear();
     countNow = countAsOfLastAnchor = std::stoi(temp);
     int previousCount{countNow};
-    showTimeFactor();
+    printw("Type and enter 'help' for a list of commands.");
     showCount();
     while (lastCharHit != 'q') {
         lastCharHit = mvgetch(1, rightwardness);
         if (running) {
             countNow = countAsOfLastAnchor + difftime(time(NULL), anchorTime) * multiplier;
-            if (countNow != previousCount) {                            
-                showCount();
+            if (countNow != previousCount) {
+                if (signbit(countNow) != signbit(previousCount)) {
+                    MessageBox(GetConsoleWindow(), (LPCTSTR)"It's time.", (LPCTSTR)"beep beep beep!", MB_ICONEXCLAMATION | MB_SETFOREGROUND);
+                }
+                if (manualVisible == false) {  
+                    showCount();
+                }
                 previousCount = countNow;
             }
             if (i % 500 == 0) {
                 writeToFile();
             }
         }
-        if (lastCharHit == ' ') {            
-            running = !running;
-            if (running == true) {
-                newStart();               
+        if (lastCharHit != ERR) {
+            if (manualVisible == true) {
+                toggleInstructions();
             }
-            mvprintw(1, rightwardness,"");
-        }
-        else if (lastCharHit == 13 || lastCharHit == PADENTER) {
-            processCommand();
-        }
-        else if (lastCharHit != ERR) {
-            if (mvinch(0, 0) != 'x') {
-                showTimeFactor();
+            else {
+                if (lastCharHit == ' ') {       
+                    running = !running;
+                    if (running == true) {
+                        newStart();               
+                    }
+                    mvprintw(1, rightwardness,"");                    
+                }
+                else if (lastCharHit == 13 || lastCharHit == PADENTER) {                
+                    processCommand();
+                }
+                else {
+                    // if (mvinch(0, 0) != 'x') {
+                    //     showTimeFactor();
+                    // }
+                    ++rightwardness;
+                    mvprintw(1, rightwardness - 1, "%c", lastCharHit);
+                }
             }
-            mvprintw(1, ++rightwardness - 1, "%c", lastCharHit);
-        }     
+        }             
         refresh();
         i = (i + 1) % 1000;
         Sleep(10);
