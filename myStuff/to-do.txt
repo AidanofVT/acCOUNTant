@@ -1,3 +1,3 @@
-- help command
-- bad input messages overflow onto the next line.
+- add an icon
 - numpad support
+- make initial help prompt disappeal after a few seconds

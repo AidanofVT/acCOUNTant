@@ -254,7 +254,6 @@ void toggleInstructions () {
     if (manualVisible == false) {
         mvprintw(0,0,"");
         clrtoeol();
-        wrefresh(manual);
         wprintw(manual,
             "This is acCOUNTant, a time-management timer.\n"
             "Its intended use is to maintain a 'bank' of time which grows with some tasks and is diminished by others. \n\n"
@@ -316,9 +315,6 @@ void processCommand () {
         case 'h':
             if (command == "help" && manualVisible == false) {
                 toggleInstructions();
-                // wrefresh(manual);
-                // wprintw(manual, "test   test   test\ntest   test   test");
-                // wrefresh(manual);
             }
             else {
                 badInput();
@@ -372,6 +368,9 @@ int main () {
                 toggleInstructions();
             }
             else {
+                if (mvinch(0, 0) != 'x') {
+                    showTimeFactor();
+                }
                 if (lastCharHit == ' ') {       
                     running = !running;
                     if (running == true) {
@@ -383,9 +382,6 @@ int main () {
                     processCommand();
                 }
                 else {
-                    // if (mvinch(0, 0) != 'x') {
-                    //     showTimeFactor();
-                    // }
                     ++rightwardness;
                     mvprintw(1, rightwardness - 1, "%c", lastCharHit);
                 }

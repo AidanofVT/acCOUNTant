@@ -4,7 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "E:/Documents/Downloads/PDCurses-3.9"
+                "E:/Documents/Apps and App Files/PDCurses-3.9"
             ],
             "defines": [
                 "_DEBUG",
