@@ -2,8 +2,8 @@
 #include "panel.h"
 #include <stdexcept>
 #include <math.h>
+#include <chrono>
 #include <cctype>
-#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -13,7 +13,7 @@
 
 bool running {false};
 int enter_keycode{};
-int anchorTime{time(NULL)};
+long anchorTime{};
 int countAsOfLastAnchor{0};
 int countNow{0};
 float multiplier{1};
@@ -66,6 +66,13 @@ void settup () {
     digits [6] = seventhDigit = newwin(10,12,2,82);
     digits [7] = eighthDigit = newwin(10,12,2,94);
     refresh();
+}
+
+long timeAsSeconds () {
+    using namespace std::chrono;
+    static time_point<system_clock> timeNow {system_clock::now()};
+    static seconds nowSeconds {duration_cast<seconds>(timeNow.time_since_epoch())};
+    return nowSeconds.count();
 }
 
 void wipeTime () {
@@ -192,7 +199,8 @@ void showCount () {
 
 void newStart () {
     countAsOfLastAnchor = countNow;
-    anchorTime = time(NULL);    
+    anchorTime = timeAsSeconds();
+    // anchorTime = time(NULL);
     showCount();
 }
 
@@ -349,7 +357,7 @@ int main () {
     while (lastCharHit != 'q') {
         lastCharHit = mvgetch(1, rightwardness);
         if (running) {
-            countNow = countAsOfLastAnchor + difftime(time(NULL), anchorTime) * multiplier;
+            countNow = countAsOfLastAnchor + difftime(timeAsSeconds(), anchorTime) * multiplier;
             if (countNow != previousCount) {
                 // if (signbit(countNow) != signbit(previousCount)) {
                 //     MessageBox(GetConsoleWindow(), (LPCTSTR)"It's time.", (LPCTSTR)"beep beep beep!", MB_ICONEXCLAMATION | MB_SETFOREGROUND);

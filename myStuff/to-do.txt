@@ -1,3 +1,4 @@
 - add an icon
 - numpad support
-- make initial help prompt disappeal after a few seconds
+- unify linux/windows builds
+- appraise gpt recommendations
