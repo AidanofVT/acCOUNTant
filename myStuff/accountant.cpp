@@ -1,11 +1,17 @@
-#include "curses.h"
+
 #include "panel.h"
 #include <stdexcept>
-#include <Windows.h>
-#include <winuser.h>
+#ifdef _WIN32
+    #include <Windows.h>
+    #include <winuser.h>
+    #include "curses.h"
+#elif defined __linux__
+    #include <unistd.h>
+    #include <ncurses.h>
+#endif
 #include <math.h>
 #include <cctype>
-#include <ctime>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -13,7 +19,7 @@
 #include <cstdlib>
 
 bool running {false};
-int anchorTime{time(NULL)};
+long anchorTime{time(NULL)};
 int countAsOfLastAnchor{0};
 int countNow{0};
 float multiplier{1};
@@ -66,6 +72,15 @@ void settup () {
     digits [6] = seventhDigit = newwin(10,12,2,82);
     digits [7] = eighthDigit = newwin(10,12,2,94);
     refresh();
+}
+
+long timeAsSeconds () {
+    using namespace std::chrono;
+    static time_point<system_clock> timeNow {};
+    static seconds nowSeconds {};
+    timeNow = system_clock::now();
+    nowSeconds = duration_cast<seconds>(timeNow.time_since_epoch());
+    return nowSeconds.count();
 }
 
 void wipeTime () {
@@ -140,7 +155,6 @@ void showCount () {
     std::string minutes {std::to_string(abs(countNow % 3600 / 60))};
     std::string seconds {std::to_string(abs(countNow % 60))};
     std::string formattedTime{hours + ":" + minutes + ":" + seconds};
-    std::cout << formattedTime << '\n';
     std::string numeral{};
     for (int i{0}; i < formattedTime.length(); ++i) {
         switch (formattedTime[i]) {
@@ -192,7 +206,7 @@ void showCount () {
 
 void newStart () {
     countAsOfLastAnchor = countNow;
-    anchorTime = time(NULL);    
+    anchorTime = timeAsSeconds();
     showCount();
 }
 
@@ -349,12 +363,17 @@ int main () {
     while (lastCharHit != 'q') {
         lastCharHit = mvgetch(1, rightwardness);
         if (running) {
-            countNow = countAsOfLastAnchor + difftime(time(NULL), anchorTime) * multiplier;
+            countNow = countAsOfLastAnchor + difftime(timeAsSeconds(), anchorTime) * multiplier;
             if (countNow != previousCount) {
                 if (signbit(countNow) != signbit(previousCount)) {
+#ifdef _WIN32
                     MessageBox(GetConsoleWindow(), (LPCTSTR)"It's time.", (LPCTSTR)"beep beep beep!", MB_ICONEXCLAMATION | MB_SETFOREGROUND);
+#elif defined __linux__
+                    std::system("notify-send \"It's time!\" \"Beep beep! Beep beep!\"");
+                    std::system("paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga");
+#endif
                 }
-                if (manualVisible == false) {  
+                if (manualVisible == false) {
                     showCount();
                 }
                 previousCount = countNow;
@@ -371,14 +390,18 @@ int main () {
                 if (mvinch(0, 0) != 'x') {
                     showTimeFactor();
                 }
-                if (lastCharHit == ' ') {       
+                if (lastCharHit == ' ') {
                     running = !running;
                     if (running == true) {
                         newStart();               
                     }
                     mvprintw(1, rightwardness,"");                    
                 }
-                else if (lastCharHit == 13 || lastCharHit == PADENTER) {                
+#ifdef _WIN32
+                else if (lastCharHit == 13 || lastCharHit == PADENTER) {
+#elif defined __linux__
+                else if (lastCharHit == 10) {
+#endif
                     processCommand();
                 }
                 else {
@@ -389,7 +412,11 @@ int main () {
         }             
         refresh();
         i = (i + 1) % 1000;
+#ifdef _WIN32
         Sleep(10);
+#elif defined __linux__
+        usleep(10000);
+#endif
     }
     endwin();
     return 0;

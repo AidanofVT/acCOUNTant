@@ -1,4 +1,4 @@
 - add an icon
-- numpad support
-- unify linux/windows builds
-- appraise gpt recommendations
+- numpad support (for windows? already works on linux)
+- add backspace/delete support, or at least let ESC clear the line
+- make the state file also save the clock multiplier
