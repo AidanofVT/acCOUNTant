@@ -11,7 +11,7 @@
                 "UNICODE",
                 "_UNICODE"
             ],
-            "compilerPath": "C:\\raylib\\w64devkit\\bin\\gcc.exe",
+            "compilerPath": "C:/mingw64/bin/gcc.exe",
             "cStandard": "gnu17",
             "intelliSenseMode": "windows-gcc-x86"
         }
